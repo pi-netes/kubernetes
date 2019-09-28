@@ -1,0 +1,19 @@
+apiVersion: apps/v1beta1 # for versions before 1.6.0 use extensions/v1beta1
+kind: Deployment
+metadata:
+  name: jp-website-frontend
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: jp-website-frontend
+    spec:
+      containers:
+      - name: jp-website-frontend
+        image: jpribyl/website-frontend:jp-website-frontend-prod
+        imagePullPolicy: Always
+        ports:
+          - name: web
+            containerPort: 3000
+            protocol: TCP

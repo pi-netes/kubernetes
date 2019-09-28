@@ -1,0 +1,66 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: jp-stripprefix
+spec:
+  stripPrefix:
+    prefixes:
+    - /jpribyl
+---
+# Redirect to https
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: jp-redirect-scheme
+spec:
+  redirectScheme:
+    scheme: https
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jp-website-frontend
+
+spec:
+  entryPoints:
+    - web
+  routes:
+  #- match: PathPrefix(`/jpribyl`) # prefix must match the path that the dockerfile specifies as static url
+  - match: Host(`johnpribyl.tk`) && PathPrefix(`/`)
+
+    kind: Rule
+    # (optional) Priority disambiguates rules of the same length, for route matching.
+    priority: 12
+    services:
+    - name: jp-website-frontend
+      port: 80
+      # (default 1) A weight used by the weighted round-robin strategy (WRR).  
+      weight: 1
+      # (default true) PassHostHeader controls whether to leave the request's Host
+      # Header as it was before it reached the proxy, or whether to let the proxy set it
+      # to the destination (backend) host.
+      passHostHeader: true
+      responseForwarding:
+        # (default 100ms) Interval between flushes of the buffered response body to the client.
+        flushInterval: 100ms
+    middlewares:
+    - name: jp-redirect-scheme
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: jp-website-frontend-tls
+
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`johnpribyl.tk`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: jp-website-frontend
+      port: 80
+    middlewares:
+    - name: jp-stripprefix
+  tls:
+    certResolver: default

@@ -1,0 +1,45 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: payouts-network-redirect-scheme
+spec:
+  redirectScheme:
+    scheme: https
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: payouts-network-frontend
+spec:
+  entryPoints:
+    - web
+  routes:
+  #- match: PathPrefix(`/payoutsnetwork`)
+  - match: Host(`payoutsnetwork.tk`) && PathPrefix(`/`)
+    kind: Rule
+    priority: 12
+    services:
+    - name: payouts-network-frontend
+      port: 80
+      weight: 1
+      passHostHeader: true
+      responseForwarding:
+        flushInterval: 100ms
+    middlewares:
+    - name: payouts-network-redirect-scheme
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: payouts-network-tls
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`payoutsnetwork.tk`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: payouts-network-frontend
+      port: 80
+  tls:
+    certResolver: default

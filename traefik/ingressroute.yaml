@@ -1,0 +1,40 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-redirect-scheme
+spec:
+  redirectScheme:
+    scheme: https
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik
+
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`traefik.tk`)
+    kind: Rule
+    services:
+    - name: traefik-admin
+      port: 8080
+    middlewares:
+    - name: traefik-redirect-scheme
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-tls
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`traefik.tk`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: traefik-admin
+      port: 8080
+  tls:
+    certResolver: default

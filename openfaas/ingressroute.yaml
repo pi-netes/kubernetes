@@ -1,0 +1,82 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: gateway-admin-redirect-scheme
+  namespace: openfaas
+spec:
+  redirectScheme:
+    scheme: https
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: openfaas-users
+  namespace: openfaas
+data:
+  users: |2
+    YWRtaW46JGFwcjEkaW1tc2QuZzAkS003OS9ZbzcuYVoxNDdFMWFITndtLw==
+---
+# Declaring the user list
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: openfaas-auth
+  namespace: openfaas
+spec:
+  basicAuth:
+    secret: openfaas-users
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gateway-admin
+  namespace: openfaas
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`openfaas.tk`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: gateway-admin
+      port: 8080
+    middlewares:
+      - name: gateway-admin-redirect-scheme
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gateway-admin-tls-entry
+  namespace: openfaas
+
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`openfaas.tk`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: gateway-admin
+      port: 8080
+  tls:
+    certResolver: default
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gateway-admin-tls
+  namespace: openfaas
+
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`openfaas.tk`) && PathPrefix(`/ui`)
+    kind: Rule
+    services:
+    - name: gateway-admin
+      port: 8080
+    middlewares:
+      - name: openfaas-auth
+  tls:
+    certResolver: default
