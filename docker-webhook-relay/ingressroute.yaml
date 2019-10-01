@@ -1,0 +1,48 @@
+# Redirect to https
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: docker-webhook-relay-redirect-scheme
+spec:
+  redirectScheme:
+    scheme: https
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: docker-webhook-relay
+
+spec:
+  entryPoints:
+    - web
+  routes:
+  - match: Host(`dockerhub.tk`) && PathPrefix(`/`)
+
+    kind: Rule
+    priority: 12
+    services:
+    - name: docker-webhook-relay
+      port: 80
+      weight: 1
+      passHostHeader: true
+      responseForwarding:
+        flushInterval: 100ms
+    middlewares:
+    - name: docker-webhook-relay-redirect-scheme
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: docker-webhook-relay-tls
+
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`dockerhub.tk`) && PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: docker-webhook-relay
+      port: 80
+  tls:
+    certResolver: default
