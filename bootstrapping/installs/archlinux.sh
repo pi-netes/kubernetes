@@ -1,6 +1,7 @@
 #!/bin/bash
+SCRIPT_DIR=$(basename "$0")
 echo verifying user...
-if [[ "${USER}" != "root" ]] ; then
+if [[ "${EUID}" != 0 ]] ; then
    echo "Must run as root."
    exit 1
 fi
@@ -25,29 +26,29 @@ sleep 8 # must wait for mods to load
 
 echo partitioning device...
 lsblk
-until [[ -b $target ]]; do
+until [[ -b $TARGET ]]; do
 echo which device is your sd card? \(ie /dev/sda\)
-  read target
-  if [[ ! -b "${target}" ]] ; then
-     echo "Not a block device: ${target}"
+  read TARGET
+  if [[ ! -b "${TARGET}" ]] ; then
+     echo "Not a block device: ${TARGET}"
   fi
 done
 
 echo would you like to proceed wiping this device? [Y/n]
-read didUserConfirm
-if [[ $didUserConfirm == 'n' ]]; then
+read DID_USER_CONFIRM
+if [[ $DID_USER_CONFIRM == 'n' ]]; then
   echo exiting...
   exit 1
 fi
 
-if [[ $target == "/dev/sda" ]]; then
+if [[ $TARGET == "/dev/sda" ]]; then
   echo i don\'t think that is correct
   exit 1
 fi
 
 echo wiping sd card and rewriting partitions..
 sleep 1
-sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk $target
+sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk $TARGET
   o # clear the in memory partition table
   n # new partition
   p # primary partition
@@ -63,32 +64,32 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk $target
   w # write the changes
     # finish
 EOF
-echo finished partitioning $target...
-mkfs.vfat ${target}p1
+echo finished partitioning $TARGET...
+mkfs.vfat ${TARGET}p1
 mkdir boot
-mount ${target}p1 boot
-mkfs.ext4 ${target}p2
+mount ${TARGET}p1 boot
+mkfs.ext4 ${TARGET}p2
 mkdir root
-mount ${target}p2 root
+mount ${TARGET}p2 root
 
 # copy files
 echo 'what model pi do you have?
 [1] rpi 2 or 3
 [2] rpi 4'
-read rpiModelNumber
+read RPI_MODEL_NUMBER
 
-if [[ $rpiModelNumber == '1' ]]; then # has rpi 2 or 3
+if [[ $RPI_MODEL_NUMBER == '1' ]]; then # has rpi 2 or 3
   echo do you have a local version of ArchLinuxARM-rpi-2-latest.tar.gz [Y/n]?
-  read hasLocalImage
-  if [[ $hasLocalImage == 'n' ]]; then
+  read HAS_LOCAL_IMAGE
+  if [[ $HAS_LOCAL_IMAGE == 'n' ]]; then
     wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz
     bsdtar -xpvf ArchLinuxARM-rpi-latest.tar.gz -C root
   else
-    until [ -f "$imagePath" ]; do
+    until [ -f "$LOCAL_IMAGE_PATH" ]; do
       echo what is the path to your image?
-      read imagePath
-      if [ -f "$imagePath" ]; then
-        bsdtar -xpvf $imagePath -C root
+      read LOCAL_IMAGE_PATH
+      if [ -f "$LOCAL_IMAGE_PATH" ]; then
+        bsdtar -xpvf $LOCAL_IMAGE_PATH -C root
       else
         echo that is not a file..
       fi
@@ -96,18 +97,18 @@ if [[ $rpiModelNumber == '1' ]]; then # has rpi 2 or 3
   fi
 fi
 
-if [[ $rpiModelNumber == '2' ]]; then # has rpi 4
+if [[ $RPI_MODEL_NUMBER == '2' ]]; then # has rpi 4
   echo do you have a local version of ArchLinuxARM-rpi-4-latest.tar.gz [Y/n]?
-  read hasLocalImage
-  if [[ $hasLocalImage == 'n' ]]; then
+  read HAS_LOCAL_IMAGE
+  if [[ $HAS_LOCAL_IMAGE == 'n' ]]; then
     wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-4-latest.tar.gz
     bsdtar -xpvf ArchLinuxARM-rpi-latest.tar.gz -C root
   else
-    until [ -f "$imagePath" ]; do
+    until [ -f "$LOCAL_IMAGE_PATH" ]; do
       echo what is the path to your image?
-      read imagePath
-      if [ -f "$imagePath" ]; then
-        bsdtar -xpvf $imagePath -C root
+      read LOCAL_IMAGE_PATH
+      if [ -f "$LOCAL_IMAGE_PATH" ]; then
+        bsdtar -xpvf $LOCAL_IMAGE_PATH -C root
       else
         echo that is not a valid file..
       fi
@@ -116,6 +117,9 @@ if [[ $rpiModelNumber == '2' ]]; then # has rpi 4
 fi
 sync
 mv root/boot/* boot
+
+echo copying bootstrap files
+cp -arv $SCRIPT_DIR/.. root/home/alarm
 
 echo configuring boot...
 echo "hdmi_force_hotplug=1" >> boot/config.txt
@@ -139,8 +143,13 @@ network={
         psk="$PASS"
 }
 EOF
+
+echo enabling dhcpcd...
 ln -s /usr/lib/systemd/system/dhcpcd@.service root/etc/systemd/system/multi-user.target.wants/dhcpcd@wlan0.service
 ln -s /usr/share/dhcpcd/hooks/10-wpa_supplicant root/usr/lib/dhcpcd/dhcpcd-hooks/
+
+echo disabling systemd-networkd...
+echo 'DNSSEC=no' >> root/etc/systemd/resolved.conf
 
 echo unmounting...
 umount boot root
@@ -151,7 +160,4 @@ echo you have successfully installed arch linux on this sd card and linked it to
 sleep 1
 echo your default user will be alarm with password alarm - please change this
 sleep 1
-echo when you boot up your pi for the first time, don\'t forget to run these commands:
-sleep 1
-echo pacman-key --init
-echo pacman-key --populate archlinuxarm
+echo when you boot up your pi for the first time, don\'t forget to run \'bash /home/alarm/bootstrap.sh\':
