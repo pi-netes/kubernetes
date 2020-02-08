@@ -4,7 +4,7 @@ if [[ "${EUID}" != 0 ]] ; then
    exit 1
 fi
 
-SCRIPT_DIR=$(basename "$0")
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 if [[ ! -f "/home/alarm/bootstrap.sh" ]]; then # not currently booted into pi
   echo this is only intended to be used in conjunction with the arclinux.sh install script! would you like to install archlinux on an sd card now? [Y/n]
   read SHOULD_INSTALL_ARCH_LINUX

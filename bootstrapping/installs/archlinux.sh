@@ -1,5 +1,5 @@
 #!/bin/bash
-SCRIPT_DIR=$(basename "$0")
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 echo verifying user...
 if [[ "${EUID}" != 0 ]] ; then
    echo "Must run as root."
@@ -158,6 +158,7 @@ rmdir boot root
 
 echo you have successfully installed arch linux on this sd card and linked it to your wifi network!
 sleep 1
-echo your default user will be alarm with password alarm - please change this
-sleep 1
-echo when you boot up your pi for the first time, don\'t forget to run \'bash /home/alarm/bootstrap.sh\':
+echo the default root password is \'root\'
+echo when you boot up your pi for the first time, don\'t forget to run:
+echo \'su\'
+echo \'bash /home/alarm/bootstrap.sh\'
