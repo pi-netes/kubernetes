@@ -20,18 +20,17 @@ usermod -a -G sudo alarm
 
 echo installing yay...
 sleep 1
-su - alarm
-git clone https://aur.archlinux.org/yay.git
+sudo -u alarm git clone https://aur.archlinux.org/yay.git
 cd yay
-makepkg -si
+sudo -u alarm makepkg -si
 cd ..
 rm -rf yay
-su
 
 echo provisioning dotfiles...
 sleep 1
 mkdir /home/alarm/.config
-mv $SCRIPT_DIR/../configs/ /home/alarm/
+mv $SCRIPT_DIR/../configs/.* /home/alarm/
+rmdir $SCRIPT_DIR/../configs
 chown -R alarm:users /home/alarm
 
 echo resetting passord...
