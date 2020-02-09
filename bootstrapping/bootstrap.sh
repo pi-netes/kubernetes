@@ -24,30 +24,44 @@ hostnamectl set-hostname $HOSTNAME
 echo setting global options...
 sed -i 's/\#Color/Color\nILoveCandy\nTotalDownload/g' /etc/pacman.conf
 
-echo installing utilities...
-bash $SCRIPT_DIR/installs/utils.sh
+echo updating and installing programs with pacman...
+bash $SCRIPT_DIR/installs/pacman.sh
 
 echo installing user profile...
 echo what would you like to name your user?
 read USERNAME
-export $USERNAME
+export USERNAME
 bash $SCRIPT_DIR/installs/userprofile.sh
 
-echo installing docker and docker compose...
-pacman -S docker docker-compose
-systemctl start docker
-systemctl enable docker
-
-echo installing kubernetes and kubeadm...
-sudo -u $USERNAME yay kubernetes-bin
-sudo -u $USERNAME yay kubeadm-bin
-
-echo installing k9s...
-pacman -S k9s
+echo installing packages from the aur
+bash $SCRIPT_DIR/installs/aur.sh
 
 echo configuring cluster...
+echo disabling swap...
+sudo dphys-swapfile swapoff && sudo dphys-swapfile uninstall && sudo update-rc.d dphys-swapfile remove 
+sudo systemctl disable dphys-swapfile  
+
+echo Adding " cgroup_enable=cpuset cgroup_enable=memory" to /boot/cmdline.txt...
+sudo cp /boot/cmdline.txt /boot/cmdline_backup.txt
+orig="$(head -n1 /boot/cmdline.txt) cgroup_enable=cpuset cgroup_enable=memory"                                                                             
+echo $orig | sudo tee /boot/cmdline.txt
+
+echo fixing docker driver...
+echo '{
+	"exec-opts": ["native.cgroupdriver=systemd"],
+	"log-driver": "json-file",
+	"log-opts": {
+		"max-size": "100m"
+	},
+	"storage-driver": "overlay2"
+}' > /etc/docker/daemon.json
+
+echo enabling docker and kubelet..
+systemctl start docker
+systemctl enable docker
+systemctl enable kubelet
 sudo -u $USERNAME /home/$USERNAME/kubetools/kubetools.sh
 
-echo cleaning up...
-rm -rf /home/alarm
-userdel alarm
+echo 'to clean up, please run:
+  rm -rf /home/alarm
+  userdel alarm'

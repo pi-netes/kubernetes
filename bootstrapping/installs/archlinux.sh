@@ -53,7 +53,7 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk $TARGET
   p # primary partition
   1 # partition number 1
     # default - start at beginning of disk 
-  +300M # 100 MB boot parttion
+  +300M # 300 MB boot parttion
   t # set partition type
   c # W95 FAT32 (LBA)
   n # partition 2
@@ -139,7 +139,7 @@ echo enabling dhcpcd...
 ln -s /usr/lib/systemd/system/dhcpcd@.service root/etc/systemd/system/multi-user.target.wants/dhcpcd@wlan0.service
 ln -s /usr/share/dhcpcd/hooks/10-wpa_supplicant root/usr/lib/dhcpcd/dhcpcd-hooks/
 
-echo disabling dns security extensions...
+echo disabling dns security extensions... # required for dns resolution for some reason
 echo 'DNSSEC=no' >> root/etc/systemd/resolved.conf
 
 echo unmounting...
@@ -147,8 +147,12 @@ umount boot root
 echo cleaning up...
 rmdir boot root
 
-echo you have successfully installed arch linux on this sd card and linked it to your wifi network!
-echo the default root password is \'root\'
-echo when you boot up your pi for the first time, don\'t forget to run:
-echo \'su\'
-echo \'bash /home/alarm/bootstrap.sh\'
+echo "You have successfully installed arch linux on this sd card and linked it to your wifi network!
+
+Here are a couple things to keep in mind:
+[1] the default root password is 'root'
+[2] the default password for the alarm user is 'alarm'
+[3] when you boot up your pi for the first time, don't forget to run:
+
+su
+bash /home/alarm/bootstrap.sh"

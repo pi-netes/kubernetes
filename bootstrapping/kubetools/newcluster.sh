@@ -9,7 +9,7 @@ if [[ $SHOULD_PULL_IMAGES == 'y' ]]; then
 fi
 
 echo assuming weave network controller...
-sudo kubeadm init && # --pod-network-cidr=10.244.0.0/16 # flannel only
+sudo kubeadm init --ignore-preflight-errors=SystemVerification && # --pod-network-cidr=10.244.0.0/16 # flannel only
 
 echo generating configs...
 mkdir -p $HOME/.kube &&

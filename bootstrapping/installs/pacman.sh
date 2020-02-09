@@ -8,11 +8,18 @@ pacman -S archlinux-keyring
 echo installing base utility programs...
 pacman -S \
   binutils \
+  docker \
+  docker-compose \
+  ebtables \
+  ethtool \
   fakeroot \
+  k9s \
   gcc \
   git \
   go \
   make \
   neovim \
   ranger \
-  sudo
+  socat \
+  sudo \
+  tmux
