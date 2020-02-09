@@ -8,15 +8,11 @@ cd ..
 rm -rf yay
 
 echo installing kubernetes...
-#yay kubelet-bin
-#yay kubectl-bin
-#yay kubeadm-bin
-
-sudo -u $USERNAME git clone https://aur.archlinux.org/kubelete-bin.git
-cd kubelete-bin
+sudo -u $USERNAME git clone https://aur.archlinux.org/kubelet-bin.git
+cd kubelet-bin
 sudo -u $USERNAME makepkg -si
 cd ..
-rm -rf kubelete-bin
+rm -rf kubelet-bin
 
 sudo -u $USERNAME git clone https://aur.archlinux.org/kubectl-bin.git
 cd kubectl-bin

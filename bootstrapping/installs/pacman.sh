@@ -8,6 +8,7 @@ pacman -S archlinux-keyring
 echo installing base utility programs...
 pacman -S \
   binutils \
+  cni-plugins \
   docker \
   docker-compose \
   ebtables \

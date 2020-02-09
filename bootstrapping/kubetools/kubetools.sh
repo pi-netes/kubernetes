@@ -5,6 +5,15 @@ if [[ "${EUID}" == 0 ]] ; then
    exit 1
 fi
 
+if [[ ! -f /etc/docker/daemon.json ]]; then
+  echo is this new hardware? [Y/n]
+  read IS_NEW_HARDWARE
+
+  if [[ $IS_NEW_HARDWARE != 'n' ]]; then
+    bash $SCRIPT_DIR/onetimesettings.sh
+  fi
+fi
+
 until [[ $OPTION == '0' ]]; do
   echo 'what would you like to do?
   [0] quit

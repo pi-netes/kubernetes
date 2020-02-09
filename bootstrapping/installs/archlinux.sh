@@ -153,6 +153,5 @@ Here are a couple things to keep in mind:
 [1] the default root password is 'root'
 [2] the default password for the alarm user is 'alarm'
 [3] when you boot up your pi for the first time, don't forget to run:
-
-su
-bash /home/alarm/bootstrap.sh"
+  su
+  bash /home/alarm/bootstrap.sh"
