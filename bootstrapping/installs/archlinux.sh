@@ -34,6 +34,11 @@ echo which device is your sd card? \(ie /dev/sda\)
   fi
 done
 
+if [[ $TARGET == "/dev/sda" ]]; then
+  echo i don\'t think that is correct
+  exit 1
+fi
+
 echo would you like to proceed wiping this device? [Y/n]
 read DID_USER_CONFIRM
 if [[ $DID_USER_CONFIRM == 'n' ]]; then
@@ -41,20 +46,14 @@ if [[ $DID_USER_CONFIRM == 'n' ]]; then
   exit 1
 fi
 
-if [[ $TARGET == "/dev/sda" ]]; then
-  echo i don\'t think that is correct
-  exit 1
-fi
-
 echo wiping sd card and rewriting partitions..
-sleep 1
 sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk $TARGET
   o # clear the in memory partition table
   n # new partition
   p # primary partition
   1 # partition number 1
     # default - start at beginning of disk 
-  +100M # 100 MB boot parttion
+  +300M # 100 MB boot parttion
   t # set partition type
   c # W95 FAT32 (LBA)
   n # partition 2
@@ -73,52 +72,44 @@ mkdir root
 mount ${TARGET}p2 root
 
 # copy files
-echo 'what model pi do you have?
-[1] rpi 2 or 3
-[2] rpi 4'
+echo 'what architecture would you like to use?
+[1] rpi 2/3 ARM 32 bit
+[2] rpi 4 ARM 32bit
+[3] rpi 3/4 ARM 64bit'
 read RPI_MODEL_NUMBER
 
-if [[ $RPI_MODEL_NUMBER == '1' ]]; then # has rpi 2 or 3
-  echo do you have a local version of ArchLinuxARM-rpi-2-latest.tar.gz [Y/n]?
-  read HAS_LOCAL_IMAGE
-  if [[ $HAS_LOCAL_IMAGE == 'n' ]]; then
-    wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz
-    bsdtar -xpvf ArchLinuxARM-rpi-latest.tar.gz -C root
-  else
-    until [ -f "$LOCAL_IMAGE_PATH" ]; do
-      echo what is the path to your image?
-      read LOCAL_IMAGE_PATH
-      if [ -f "$LOCAL_IMAGE_PATH" ]; then
-        bsdtar -xpvf $LOCAL_IMAGE_PATH -C root
-      else
-        echo that is not a file..
-      fi
-    done
-  fi
+if [[ $RPI_MODEL_NUMBER == '1' ]]; then
+  DOWNLOAD_LINK='http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-2-latest.tar.gz'
 fi
 
-if [[ $RPI_MODEL_NUMBER == '2' ]]; then # has rpi 4
-  echo do you have a local version of ArchLinuxARM-rpi-4-latest.tar.gz [Y/n]?
-  read HAS_LOCAL_IMAGE
-  if [[ $HAS_LOCAL_IMAGE == 'n' ]]; then
-    wget http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-4-latest.tar.gz
-    bsdtar -xpvf ArchLinuxARM-rpi-latest.tar.gz -C root
-  else
-    until [ -f "$LOCAL_IMAGE_PATH" ]; do
-      echo what is the path to your image?
-      read LOCAL_IMAGE_PATH
-      if [ -f "$LOCAL_IMAGE_PATH" ]; then
-        bsdtar -xpvf $LOCAL_IMAGE_PATH -C root
-      else
-        echo that is not a valid file..
-      fi
-    done
-  fi
+if [[ $RPI_MODEL_NUMBER == '2' ]]; then
+  DOWNLOAD_LINK='http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-4-latest.tar.gz'
 fi
+
+if [[ $RPI_MODEL_NUMBER == '3' ]]; then
+  DOWNLOAD_LINK='http://os.archlinuxarm.org/os/ArchLinuxARM-rpi-3-latest.tar.gz'
+fi
+
+echo do you have a local version of $DOWNLOAD_LINK [Y/n]?
+read HAS_LOCAL_IMAGE
+if [[ $HAS_LOCAL_IMAGE == 'n' ]]; then
+  wget $DOWNLOAD_LINK
+  LOCAL_IMAGE_PATH=$DOWNLOAD_LINK
+fi
+
+until [ -f "$LOCAL_IMAGE_PATH" ]; do
+  echo what is the path to your image?
+  read LOCAL_IMAGE_PATH
+  if [! -f "$LOCAL_IMAGE_PATH" ]; then
+    echo that is not a file..
+  fi
+done
+
+bsdtar -xpvf $LOCAL_IMAGE_PATH -C root
 sync
 mv root/boot/* boot
 
-echo copying bootstrap files
+echo copying bootstrap files...
 cp -arv $SCRIPT_DIR/.. root/home/alarm
 
 echo configuring boot...
@@ -148,7 +139,7 @@ echo enabling dhcpcd...
 ln -s /usr/lib/systemd/system/dhcpcd@.service root/etc/systemd/system/multi-user.target.wants/dhcpcd@wlan0.service
 ln -s /usr/share/dhcpcd/hooks/10-wpa_supplicant root/usr/lib/dhcpcd/dhcpcd-hooks/
 
-echo disabling systemd-networkd...
+echo disabling dns security extensions...
 echo 'DNSSEC=no' >> root/etc/systemd/resolved.conf
 
 echo unmounting...
@@ -157,7 +148,6 @@ echo cleaning up...
 rmdir boot root
 
 echo you have successfully installed arch linux on this sd card and linked it to your wifi network!
-sleep 1
 echo the default root password is \'root\'
 echo when you boot up your pi for the first time, don\'t forget to run:
 echo \'su\'

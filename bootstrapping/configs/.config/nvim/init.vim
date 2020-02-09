@@ -81,14 +81,6 @@ nnoremap <space>s :%s/|                                                         
 nnoremap <leader>a =ip|                                                                                     "Align paragraphs
 nnoremap cp yap<S-}>p|                                                                                      "Clone paragraph
 nnoremap Q @q|                                                                                              "Apply q macro with Q
-"                                                                                                           "vimux file types
-au bufnewfile,bufread *.tex
-    \ nnoremap <Leader>b :w\|:call VimuxRunCommand("clear; xelatex " . bufname("%"))<CR>
-au bufnewfile,bufread *.js
-    \ nnoremap <Leader>b :w\|:call VimuxRunCommand("clear; node " . bufname("%"))<CR>|
-    \ nnoremap K :TernDocBrowse<CR>|
-au bufnewfile,bufread *.py
-    \ nnoremap <Leader>b :w\|:call VimuxRunCommand("clear; python " . bufname("%"))<CR>
 
 """""""""""""""""""""""""""""""""""""""""""                                                                 
 " Install Vim Plug if not installed                                                                         
@@ -109,38 +101,9 @@ Plug 'vim-airline/vim-airline'                                                  
 Plug 'vim-airline/vim-airline-themes'                                                                       "color for bottom bar
 Plug 'Yggdroot/indentLine'                                                                                  "vertical lines showing where indents start/end
 
-"""""""""""""""""""""""""""""""""""""""""""                                                                 
-" auto-completion                                                                                           
-"""""""""""""""""""""""""""""""""""""""""""                                                                 
-"Plug 'ervandew/supertab'                                                                                    
-Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }                                               "docs require update post install (note, fails if pynvim not installed when PlugInstall)
-    function! s:check_back_space() abort "{{{
-        let col = col('.') - 1
-        return !col || getline('.')[col - 1]  =~ '\s'
-        endfunction"}}}
-    inoremap <silent><expr> <TAB>
-        \ pumvisible() ? "\<C-n>" :
-        \ <SID>check_back_space() ? "\<TAB>" :
-        \ deoplete#manual_complete()
-    inoremap <expr><s-tab> pumvisible() ? "\<c-p>" : "\<s-tab>"|                                                "deoplete tab-complete
-    inoremap <expr> <CR> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"|                                          "deoplete enter selects option
-Plug 'wokalski/autocomplete-flow',{ 'for': ['javascript', 'javascript.jsx'] }                               "deoplete source for js
-Plug 'ternjs/tern_for_vim', { 'for': ['javascript', 'javascript.jsx'], 'do': 'npm install' }                "starts js server for better code completion
-Plug 'carlitux/deoplete-ternjs', { 'for': ['javascript', 'javascript.jsx'], 'do': 'npm install -g tern' }   "integrates tern with deoplete
-Plug 'deoplete-plugins/deoplete-jedi', { 'for': ['python'] }                                                "deoplete source for python
-Plug 'lervag/vimtex'
-
-Plug 'SirVer/ultisnips'
-Plug 'honza/vim-snippets'
-
 """""""""""""""""""""""""""""""""""""""""""
 "navigation
 """""""""""""""""""""""""""""""""""""""""""
-Plug 'vim-ctrlspace/vim-ctrlspace'
-    nnoremap <space>j :CtrlSpaceGoDown<CR>
-    nnoremap <space>k :CtrlSpaceGoUp<CR>
-    nnoremap gj :tabprevious<CR>
-    nnoremap gk :tabnext<CR>
 Plug 'rafaqz/ranger.vim'
     nnoremap <leader>rr :RangerEdit<cr>
     nnoremap <leader>rv :RangerVSplit<cr>
@@ -148,20 +111,7 @@ Plug 'rafaqz/ranger.vim'
     nnoremap <leader>rt :RangerTab<cr>
     nnoremap <leader>ri :RangerInsert<cr>
     nnoremap <leader>ra :RangerAppend<cr>
-Plug 'kien/ctrlp.vim'
 Plug 'christoomey/vim-tmux-navigator'
-Plug 'easymotion/vim-easymotion'
-    map  <leader>f <Plug>(easymotion-bd-f)|                                                                 "reverse find and easymotion find
-    nmap <leader>f <Plug>(easymotion-overwin-f)
-    nmap X <Plug>(easymotion-overwin-f2)
-    map <Leader>L <Plug>(easymotion-bd-jk)|                                                                 "move to line
-    nmap <Leader>L <Plug>(easymotion-overwin-line)
-    map  <Leader>w <Plug>(easymotion-bd-w)|                                                                 "move to word
-    nmap <Leader>w <Plug>(easymotion-overwin-w)
-    map <Leader>l <Plug>(easymotion-lineforward)|                                                           "move to line same column
-    map <Leader>j <Plug>(easymotion-j)
-    map <Leader>k <Plug>(easymotion-k)
-    map <Leader>h <Plug>(easymotion-linebackward)
 Plug 'benmills/vimux'
     nnoremap <Leader>p :call VimuxRunCommand("clear; python " . bufname("%"))<CR>
     nnoremap <Leader><space> :VimuxPromptCommand<CR>
@@ -190,13 +140,6 @@ Plug 'https://github.com/scrooloose/nerdcommenter.git'
 Plug 'kana/vim-surround'
 Plug 'jiangmiao/auto-pairs'
 
-"""""""""""""""""""""""""""""""""""""""""""
-"js
-"""""""""""""""""""""""""""""""""""""""""""
-Plug 'mxw/vim-jsx', { 'for': ['javascript', 'javascript.jsx'] }
-Plug 'mattn/emmet-vim', { 'for': ['javascript', 'javascript.jsx', 'html'] }
-Plug 'prettier/vim-prettier', { 'for': ['javascript', 'javascript.jsx'] }
-
 call plug#end()
 
 """""""""""""""""""""""""""""""""""""""""""
@@ -204,34 +147,8 @@ call plug#end()
 """""""""""""""""""""""""""""""""""""""""""
 "let g:python_host_prog = '/full/path/to/neovim2/bin/python'                                                "venv for python2 autocompletion
 "let g:python3_host_prog = '/home/'.$USER.'/.config/nvim/nvim-python-env/bin/python3'                        "venv for python3 autocompletion
-let g:EasyMotion_startofline = 0                                                                            "keep cursor column when JK motion
 let g:airline_powerline_fonts = 1                                                                           "pretty arrows on bottom bar
 let g:airline_theme='wombat'                                                                                "color theme of bottom bar
-
-let g:deoplete#sources#ternjs#docs = 1                                                                      "use tern docs
-let g:deoplete#sources#ternjs#types = 0                                                                     "use tern type hints
-let g:deoplete#sources#ternjs#case_insensitive = 1
-let g:deoplete#sources#ternjs#filetypes = ['jsx', 'ts', 'js']                                               "filetypes to include with tern
-let g:tern#command = ["tern"]                                                                               "allow using tern_for_vim and deoplete-tern at same time
-let g:tern#arguments = ["--persistent"]                                                                     "same as previous
-
-let g:deoplete#enable_at_startup = 1                                                                        "turn on deoplete
-let g:deoplete#disable_auto_complete = 1                                                                    "don't pop up autocomplete without tab
-"let g:deoplete#auto_complete_delay=2000                                                                     "delay before popping up
-call deoplete#custom#source('ultisnips', 'rank', 1000)
-call deoplete#custom#source('file', 'rank', 1000)
-
-let g:UltiSnipsExpandTrigger="<C-j>"                                                                        "tab to select snippet, but not to expand it
-let g:CtrlSpaceDefaultMappingKey = "<C-space> "                                                             "show open windows
-let g:prettier#config#trailing_comma = 'all'                                                                "include commas on js arrays
-
-autocmd CompleteDone * silent! pclose!
-
-"autoformat js and python files
-augroup fmt
-  autocmd!
-  autocmd BufWritePre *.js,*.jsx,*.py undojoin | Neoformat
-augroup END
 
 " Required:
 filetype plugin indent on
